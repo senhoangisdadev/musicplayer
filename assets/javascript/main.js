@@ -1,15 +1,28 @@
+// 1.Render songs
+// 2.Scroll top
+// 3.Play / pause / seek
+// 4.CD rotate
+// 5.Next / prev
+// 6.Random
+// 7.Next / repeat then end
+// 8.Active song
+// 9.Scroll active song into view
+// 10.Play song when click
+
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 
-const cd = $(".cd")
-const heading = $('header h2')
-const cdThumb = $('.cd-thumb')
-const audio = $('#audio')
-const playBtn = $('.btn-toggle-play')
-
+const cd = $(".cd");
+const heading = $("header h2");
+const cdThumb = $(".cd-thumb");
+const audio = $("#audio");
+const playBtn = $(".btn-toggle-play");
+const player = $(".player");
+const progress = $("#progress");
 
 const app = {
   currentIndex: 0,
+  isPlaying: false,
   songs: [
     {
       name: "See you again",
@@ -79,23 +92,77 @@ const app = {
     $(".playlist").innerHTML = hmtls.join("");
   },
   handleEvents: function () {
+    const _this = this;
     const cdWidth = cd.offsetWidth;
 
+    // Xử lý đĩa CD quay \ dừng
+    const cdThumbAnimate = cdThumb.animate([{ transform: "rotate(360deg)" }], {
+      duration: 10000, //10s
+      iterations: Infinity
+    });
+    cdThumbAnimate.pause()
+
+    // Hàm xử  lý phóng to thu nhỏ
     document.onscroll = function () {
       const scrollTop = document.documentElement.scrollTop || window.scrollY;
       const newCdWidth = cdWidth - scrollTop;
 
       cd.style.width = newCdWidth > 0 ? newCdWidth + "px" : 0;
     };
-  },
-  defineProperties: function() {
-      Object.defineProperty(this, 'currentSong',{
-        get: function() {
-          return this.songs[this.currentIndex]
+
+    // Xử lý khi click play
+    playBtn.onclick = function () {
+      if (_this.isPlaying) {
+        audio.pause();
+      } else {
+        audio.play();
+      }
+
+      // Khi song on playing
+      audio.onplaying = function () {
+        cdThumbAnimate.play()
+        _this.isPlaying = true;
+        player.classList.add("playing");
+      };
+
+      // Khi song on pause
+      audio.onpause = function () {
+        cdThumbAnimate.pause()
+        _this.isPlaying = false;
+        player.classList.remove("playing");
+      };
+
+      // Tiến độ bài hát
+      audio.ontimeupdate = function () {
+        if (audio.duration) {
+          const progressPercent = Math.floor(
+            (audio.currentTime / audio.duration) * 100
+          );
+          progress.value = progressPercent;
         }
-      })
+      };
+
+      // Xử lý tua
+      progress.onchange = function (e) {
+        const seek = (audio.duration / 100) * e.target.value;
+        audio.currentTime = seek;
+      };
+    };
   },
-  loadCurrentSong: function(){
+  defineProperties: function () {
+    Object.defineProperty(this, "currentSong", {
+      get: function () {
+        return this.songs[this.currentIndex];
+      },
+    });
+  },
+  loadCurrentSong: function () {
+    heading.textContent = this.currentSong.name;
+    cdThumb.style.background = `url('${this.currentSong.image}')`;
+    audio.src = this.currentSong.path;
+  },
+  nextSong: function() {
+    this.currentIndex++
   },
   start: function () {
     // Định nghĩa các thuộc tính cho object
@@ -105,7 +172,7 @@ const app = {
     this.handleEvents();
 
     // Tải thông tin đầu tiên vào IU khi chạy ứng dụng
-    this.loadCurrentSong()
+    this.loadCurrentSong();
 
     // Render playlist
     this.render();
@@ -114,4 +181,4 @@ const app = {
 
 app.start();
 
-console.log(app.songs[0]);
+// console.log(app.songs[0]);
