@@ -91,6 +91,7 @@
     color: #666;
     padding: 18px;
     font-size: 18px;
+    cursor: pointer;
   }
   
   .control .btn.active {
@@ -111,7 +112,7 @@
   
   .progress {
     width: 100%;
-    -webkit-appearance: none;
+    /* -webkit-appearance: none; */
     height: 6px;
     background: #d3d3d3;
     outline: none;
